@@ -13,7 +13,7 @@ Globals:
 
 Resources:
 
-    HelloWorldFunction:
+    DungeonMaestroFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
             CodeUri: ./
@@ -31,14 +31,14 @@ Resources:
 
 Outputs:
 
-    HelloWorldApi:
+    DungeonMaestroApi:
       Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
 
-    HelloWorldFunction:
+    DungeonMaestroFunction:
       Description: "Hello World Lambda Function ARN"
-      Value: !GetAtt HelloWorldFunction.Arn
+      Value: !GetAtt DungeonMaestroFunction.Arn
 
     HelloWorldFunctionIamRole:
       Description: "Implicit IAM Role created for Hello World function"
-      Value: !GetAtt HelloWorldFunctionRole.Arn
+      Value: !GetAtt DungeonMaestroFunctionRole.Arn
