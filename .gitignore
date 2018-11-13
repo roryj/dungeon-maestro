@@ -20,3 +20,7 @@
 *.iml
 out
 gen
+
+# App specific files
+sam-app/main*
+sam-app/packaged.yaml
