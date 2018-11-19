@@ -7,62 +7,15 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"log"
-	"math/rand"
-	"strconv"
 	"strings"
 )
 
 const (
 	diceRoll = "roll"
+	identifySpell = "identify"
 )
 
-type DndAction interface {
-	ProcessAction() (string, error)
-}
 
-type Action struct {
-	ActionType string `json:"action_type"`
-}
-
-type DiceRoll struct {
-	DiceSides int
-	NumberOfDice int
-}
-
-// NewDiceRoll takes the input text for the /roll command and turns it into a DiceRoll struct
-// The format for the dice roll command is /roll <num-dice> d<dice-type>
-// ex: /roll 10 d20
-func NewDiceRoll(input string) (*DiceRoll, error) {
-	// split on html encoded spaces (+)
-	split := strings.Split(input, "+")
-
-	if len(split) != 2 {
-		return &DiceRoll{}, fmt.Errorf("incorrect number of dice roll parameters. ex: /roll 12 d20")
-	}
-
-	// first item should be an int
-	numDice, err := strconv.Atoi(split[0])
-	if err != nil {
-		return &DiceRoll{}, fmt.Errorf("the first parameter, %s, needs to be the number of dice to roll (ex: 10)", split[0])
-	}
-
-	// second item should start with the letter d, and followed by an integer
-	if !strings.HasPrefix(split[1], "d") {
-		return &DiceRoll{}, fmt.Errorf("the second parameter, %s, needs to be the number of sides on the dice (ex: d20)", split[0])
-	}
-
-	dS := strings.Replace(split[1], "d", "", 1)
-
-	diceSides, err := strconv.Atoi(dS)
-	if err != nil {
-		return &DiceRoll{}, fmt.Errorf("the second parameter, %s, needs to be the number of sides on the dice (ex: d20)", split[0])
-	}
-
-	return &DiceRoll{
-		DiceSides: diceSides,
-		NumberOfDice: numDice,
-	}, nil
-}
 
 type SlackRequest struct {
 	Token string `json:"token"`
@@ -74,17 +27,6 @@ type SlackRequest struct {
 	UserName string `json:"user_name"`
 	Command string `json:"command"`
 	ResponseUrl string `json:"response_url"`
-}
-
-func (d *DiceRoll) ProcessAction() (string, error) {
-
-	var total int
-
-	for i := 0; i < d.NumberOfDice; i++ {
-		total += rand.Intn(d.DiceSides) + 1
-	}
-
-	return fmt.Sprintf("Rolled %d d%d and got %d\n", d.NumberOfDice, d.DiceSides, total), nil
 }
 
 func init() {
@@ -124,6 +66,15 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		}
 
 		break
+	case identifySpell:
+		log.Printf("Detected identify spell request.")
+		action, err = NewIdentifySpell(sr.Text)
+		if err != nil {
+			return events.APIGatewayProxyResponse{
+				StatusCode: 400,
+				Body: fmt.Sprintf("%s", err),
+			}, nil
+		}
 	default:
 		return events.APIGatewayProxyResponse{
 			StatusCode: 400,
