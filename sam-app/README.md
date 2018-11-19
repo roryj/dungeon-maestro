@@ -4,33 +4,43 @@ This is a sample template for sam-app - Below is a brief explanation of what we 
 
 ```bash
 .
+├── Makefile                    <-- Make to automate build
 ├── README.md                   <-- This instructions file
-├── hello_world                 <-- Source code for a lambda function
-│   ├── app.js                  <-- Lambda function code
-│   ├── package.json            <-- NodeJS dependencies
-│   └── tests                   <-- Unit tests
-│       └── unit
-│           └── test_handler.js
-└── template.yaml               <-- SAM template
+├── hello-world                 <-- Source code for a lambda function
+│   ├── main.go                 <-- Lambda function code
+│   └── main_test.go            <-- Unit tests
+└── template.yaml
 ```
 
 ## Requirements
 
 * AWS CLI already configured with Administrator permission
-* [NodeJS 8.10+ installed](https://nodejs.org/en/download/)
 * [Docker installed](https://www.docker.com/community-edition)
+* [Golang](https://golang.org)
 
 ## Setup process
 
 ### Installing dependencies
 
-In this example we use `npm` but you can use `yarn` if you prefer to manage NodeJS dependencies:
+In this example we use the built-in `go get` and the only dependency we need is AWS Lambda Go SDK:
 
-```bash
-cd hello_world
-npm install
-cd ../
+```shell
+go get -u github.com/aws/aws-lambda-go/...
 ```
+
+**NOTE:** As you change your application code as well as dependencies during development, you might want to research how to handle dependencies in Golang at scale.
+
+### Building
+
+Golang is a staticly compiled language, meaning that in order to run it you have to build the executeable target.
+
+You can issue the following command in a shell to build it:
+
+```shell
+GOOS=linux GOARCH=amd64 go build -o hello-world/hello-world ./hello-world
+```
+
+**NOTE**: If you're not building the function on a Linux machine, you will need to specify the `GOOS` and `GOARCH` environment variables, this allows Golang to build your function for another system architecture and ensure compatability.
 
 ### Local development
 
@@ -56,7 +66,7 @@ Events:
 
 ## Packaging and deployment
 
-AWS Lambda NodeJS runtime requires a flat folder with all dependencies including the application. SAM will use `CodeUri` property to know where to look up for both application and dependencies:
+AWS Lambda Python runtime requires a flat folder with all dependencies including the application. SAM will use `CodeUri` property to know where to look up for both application and dependencies:
 
 ```yaml
 ...
@@ -67,7 +77,7 @@ AWS Lambda NodeJS runtime requires a flat folder with all dependencies including
             ...
 ```
 
-Firstly, we need a `S3 bucket` where we can upload our Lambda functions packaged as ZIP before we deploy anything - If you don't have a S3 bucket to store code artifacts then this is a good time to create one:
+First and foremost, we need a `S3 bucket` where we can upload our Lambda functions packaged as ZIP before we deploy anything - If you don't have a S3 bucket to store code artifacts then this is a good time to create one:
 
 ```bash
 aws s3 mb s3://BUCKET_NAME
@@ -101,17 +111,49 @@ aws cloudformation describe-stacks \
     --query 'Stacks[].Outputs'
 ``` 
 
-## Testing
+### Testing
 
-We use `mocha` for testing our code and it is already added in `package.json` under `scripts`, so that we can simply run the following command to run our tests:
+We use `testing` package that is built-in in Golang and you can simply run the following command to run our tests:
 
-```bash
-cd hello_world
-npm run test
+```shell
+go test -v ./hello-world/
 ```
-
 # Appendix
 
+### Golang installation
+
+Please ensure Go 1.x (where 'x' is the latest version) is installed as per the instructions on the official golang website: https://golang.org/doc/install
+
+A quickstart way would be to use Homebrew, chocolatey or your linux package manager.
+
+#### Homebrew (Mac)
+
+Issue the following command from the terminal:
+
+```shell
+brew install golang
+```
+
+If it's already installed, run the following command to ensure it's the latest version:
+
+```shell
+brew update
+brew upgrade golang
+```
+
+#### Chocolatey (Windows)
+
+Issue the following command from the powershell:
+
+```shell
+choco install golang
+```
+
+If it's already installed, run the following command to ensure it's the latest version:
+
+```shell
+choco upgrade golang
+```
 ## AWS CLI commands
 
 AWS CLI commands to package, deploy and describe outputs defined within the cloudformation stack:
@@ -131,8 +173,6 @@ sam deploy \
 aws cloudformation describe-stacks \
     --stack-name sam-app --query 'Stacks[].Outputs'
 ```
-
-**NOTE**: Alternatively this could be part of package.json scripts section.
 
 ## Bringing to the next level
 
