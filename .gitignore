@@ -22,5 +22,5 @@ out
 gen
 
 # App specific files
-sam-app/main*
+sam-app/maestro*
 sam-app/packaged.yaml
