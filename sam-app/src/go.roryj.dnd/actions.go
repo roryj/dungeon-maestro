@@ -73,22 +73,11 @@ type IdentifySpell struct {
 }
 
 func NewIdentifySpell(input string) (*IdentifySpell, error) {
-	// split on html encoded spaces (+)
-	split := strings.Split(input, "+")
-
-	if len(split) < 1 {
-		return &IdentifySpell{}, fmt.Errorf("incorrect number of arguments for identify. You need put a spell to identify")
-	}
-
-	var statBlocks []string
-
-	if len(split) > 1 {
-		statBlocks = split[1:]
-	}
+	s := strings.Replace(input, "+", " ", -1)
 
 	return &IdentifySpell{
-		spellName:  split[0],
-		statBlocks: statBlocks,
+		spellName: s,
+		statBlocks: []string{},
 	}, nil
 }
 
