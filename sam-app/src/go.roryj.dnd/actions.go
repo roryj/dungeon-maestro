@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"golang.org/x/net/html"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -102,8 +101,11 @@ func (s *IdentifySpell) ProcessAction() (string, error) {
 	urlEncodedSpell := strings.Replace(s.spellName, " ", "-", -1)
 	urlEncodedSpell = strings.Replace(urlEncodedSpell, "/", "-", -1)
 	urlEncodedSpell = strings.Replace(urlEncodedSpell, "'", "", -1)
+	urlEncodedSpell = strings.ToLower(urlEncodedSpell)
 
 	fullPath := dndSpellEndoint + urlEncodedSpell
+
+	log.Printf("url: %s", fullPath)
 
 	resp, err := http.Get(fullPath)
 	if err != nil {
@@ -111,15 +113,112 @@ func (s *IdentifySpell) ProcessAction() (string, error) {
 	}
 	defer resp.Body.Close()
 
-	res, err := ioutil.ReadAll(resp.Body)
 	rootDoc, err := html.Parse(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse the request from dnd beyod. %v", err)
 	}
 
-	log.Printf("Result: %v", rootDoc)
+	var missingAttributes  []string
+	result := fmt.Sprintf("Description of %s\n", s.spellName)
 
-	return fmt.Sprintf("%s", string(res)), nil
+	spellAttributes := []string {"Level", "Casting Time", "Range/Area", "Components", "Duration", "School",
+	"Attack/Save", "Damage/Effect"}
+	//spellAttributes := []string { "Components" }
+
+	for _, a := range spellAttributes {
+		log.Printf("getting %s attribute", a)
+		r, ok := getSpellAttribute(rootDoc, a)
+		if !ok {
+			missingAttributes = append(missingAttributes, a)
+		} else {
+			result = result + r + "\n"
+		}
+	}
+
+	if len(missingAttributes) > 0 {
+		return "", fmt.Errorf("failed to find attributes for: %v", missingAttributes)
+	}
+
+	return result, nil
+}
+
+func getSpellAttribute(n *html.Node, spellAttribute string) (string, bool) {
+	value, ok := getValueForAttribute(n, spellAttribute)
+	return fmt.Sprintf("%s: %s", spellAttribute, value), ok
+}
+
+const classFormat = "ddb-statblock-item ddb-statblock-item-%s"
+const valueClass = "ddb-statblock-item-value"
+
+func getValueForAttribute(n *html.Node, dndAttribute string) (string, bool) {
+	a := strings.ToLower(dndAttribute)
+	a = strings.Replace(a, "/", "-", -1)
+	a = strings.Replace(a, " ", "-", -1)
+	attrClassName := fmt.Sprintf(classFormat, a)
+	log.Printf("formatted class name: %s", attrClassName)
+
+	attrNode, ok := findHtmlElement(n, attrClassName)
+	if !ok {
+		log.Printf("failed to find dnd attribute for %s", dndAttribute)
+		return "", false
+	}
+
+	value, ok := findHtmlElement(attrNode, valueClass)
+	if !ok {
+		log.Printf("failed to find value for attribute %s", dndAttribute)
+		return "", false
+	}
+
+	var result string
+
+	// Most dnd attributes can be found as the text under ddb-statblock-item-value class for the attribute. However,
+	// Damage/Effect and Components are different.
+	switch dndAttribute {
+	case "Attack/Save":
+		result = strings.TrimSpace(value.LastChild.PrevSibling.FirstChild.Data)
+	case "Damage/Effect":
+		result = strings.TrimSpace(value.LastChild.Data)
+	case "Components":
+		result = strings.TrimSpace(value.FirstChild.NextSibling.FirstChild.Data)
+	default:
+		result = strings.TrimSpace(value.FirstChild.Data)
+	}
+
+	return result, true
+}
+
+func findHtmlElement(n *html.Node, className string) (*html.Node, bool) {
+
+	if checkClassName(n, className)  {
+		return n, true
+	}
+
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		result, ok := findHtmlElement(c, className)
+		if result != nil {
+			return result, ok
+		}
+	}
+
+	return nil, false
+}
+
+func checkClassName(n *html.Node, className string) bool {
+	a, ok := getAttribute(n, "class")
+	if ok && a == className {
+		return true
+	}
+	return false
+}
+
+func getAttribute(n *html.Node, attrKey string) (string, bool) {
+	for _, attr := range n.Attr {
+		if attr.Key == attrKey {
+			return attr.Val, true
+		}
+	}
+
+	return "", false
 }
 
 
