@@ -55,7 +55,7 @@ func NewDiceRoll(input string) (*DiceRoll, error) {
 }
 
 func (d *DiceRoll) ProcessAction() (string, error) {
-
+	log.Printf("Processing dice roll on %v", d)
 	var total int
 
 	for i := 0; i < d.numberOfDice; i++ {
@@ -86,6 +86,7 @@ func NewIdentifySpell(input string) (*IdentifySpell, error) {
 // ex: 	Antimagic Field -> /spells/antimagic-field
 // 		Antipathy/Sympathy -> /spells/antipathy-sympathy
 func (s *IdentifySpell) ProcessAction() (string, error) {
+	log.Printf("Processing spell identify on %v", s)
 
 	urlEncodedSpell := strings.Replace(s.spellName, " ", "-", -1)
 	urlEncodedSpell = strings.Replace(urlEncodedSpell, "/", "-", -1)

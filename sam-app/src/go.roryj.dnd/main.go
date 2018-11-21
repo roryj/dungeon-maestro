@@ -32,11 +32,6 @@ func init() {
 }
 
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	log.Println("Handling request")
-
-	log.Printf("Request: %v\n", request)
-	log.Printf("body: %v\n", request.Body)
-
 	sr, err := parseSlackRequest(request.Body)
 	if err != nil {
 		fmt.Printf("Unable to marshal request: %v", err)
@@ -49,7 +44,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	// remove html encoded "/" character from the front of the command
 	command := strings.Replace(sr.Command, "%2F", "", 1)
-	log.Printf("processing command %s", command)
+	log.Printf("Processing command %s", command)
 
 	switch command {
 	case diceRoll: // for a dice roll, we expect the following format: /roll <number-of-dice> d<dice-type> ie. /roll 10 d4
