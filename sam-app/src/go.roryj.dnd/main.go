@@ -11,21 +11,19 @@ import (
 )
 
 const (
-	diceRoll = "roll"
+	diceRoll      = "roll"
 	identifySpell = "spell"
 )
 
-
-
 type SlackRequest struct {
-	Token string `json:"token"`
-	TeamId string `json:"team_id"`
-	Text string `json:"text"`
-	TeamDomain string `json:"team_domain"`
-	ChannelId string `json:"channel_id"`
-	UserId string `json:"user_id"`
-	UserName string `json:"user_name"`
-	Command string `json:"command"`
+	Token       string `json:"token"`
+	TeamId      string `json:"team_id"`
+	Text        string `json:"text"`
+	TeamDomain  string `json:"team_domain"`
+	ChannelId   string `json:"channel_id"`
+	UserId      string `json:"user_id"`
+	UserName    string `json:"user_name"`
+	Command     string `json:"command"`
 	ResponseUrl string `json:"response_url"`
 }
 
@@ -53,7 +51,6 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	command := strings.Replace(sr.Command, "%2F", "", 1)
 	log.Printf("processing command %s", command)
 
-
 	switch command {
 	case diceRoll: // for a dice roll, we expect the following format: /roll <number-of-dice> d<dice-type> ie. /roll 10 d4
 		log.Printf("Detected dice roll request.")
@@ -61,7 +58,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		if err != nil {
 			return events.APIGatewayProxyResponse{
 				StatusCode: 400,
-				Body: fmt.Sprintf("%s", err),
+				Body:       fmt.Sprintf("%s", err),
 			}, nil
 		}
 
@@ -72,13 +69,13 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		if err != nil {
 			return events.APIGatewayProxyResponse{
 				StatusCode: 400,
-				Body: fmt.Sprintf("%s", err),
+				Body:       fmt.Sprintf("%s", err),
 			}, nil
 		}
 	default:
 		return events.APIGatewayProxyResponse{
 			StatusCode: 400,
-			Body: "unknown request type. Only [/roll /spell] are accepted",
+			Body:       "unknown request type. Only [/roll /spell] are accepted",
 		}, nil
 	}
 
@@ -92,7 +89,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	result := events.APIGatewayProxyResponse{
 		StatusCode: 200,
-		Body: actionResult,
+		Body:       actionResult,
 	}
 
 	return result, nil

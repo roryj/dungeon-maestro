@@ -68,7 +68,7 @@ func (d *DiceRoll) ProcessAction() (string, error) {
 const dndSpellEndoint = "https://www.dndbeyond.com/spells/"
 
 type IdentifySpell struct {
-	spellName string
+	spellName  string
 	statBlocks []string
 }
 
@@ -87,7 +87,7 @@ func NewIdentifySpell(input string) (*IdentifySpell, error) {
 	}
 
 	return &IdentifySpell{
-		spellName: split[0],
+		spellName:  split[0],
 		statBlocks: statBlocks,
 	}, nil
 }
@@ -118,11 +118,11 @@ func (s *IdentifySpell) ProcessAction() (string, error) {
 		return "", fmt.Errorf("failed to parse the request from dnd beyod. %v", err)
 	}
 
-	var missingAttributes  []string
+	var missingAttributes []string
 	result := fmt.Sprintf("Description of %s\n", s.spellName)
 
-	spellAttributes := []string {"Level", "Casting Time", "Range/Area", "Components", "Duration", "School",
-	"Attack/Save", "Damage/Effect"}
+	spellAttributes := []string{"Level", "Casting Time", "Range/Area", "Components", "Duration", "School",
+		"Attack/Save", "Damage/Effect"}
 	//spellAttributes := []string { "Components" }
 
 	for _, a := range spellAttributes {
@@ -189,7 +189,7 @@ func getValueForAttribute(n *html.Node, dndAttribute string) (string, bool) {
 
 func findHtmlElement(n *html.Node, className string) (*html.Node, bool) {
 
-	if checkClassName(n, className)  {
+	if checkClassName(n, className) {
 		return n, true
 	}
 
@@ -220,5 +220,3 @@ func getAttribute(n *html.Node, attrKey string) (string, bool) {
 
 	return "", false
 }
-
-

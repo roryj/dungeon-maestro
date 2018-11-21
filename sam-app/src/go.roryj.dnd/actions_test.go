@@ -7,8 +7,8 @@ import (
 
 func TestNewIdentifySpell(t *testing.T) {
 	spell := IdentifySpell{
-		spellName: "Abi Dalzims Horrid Wilting",
-		statBlocks: []string {},
+		spellName:  "Abi Dalzims Horrid Wilting",
+		statBlocks: []string{},
 	}
 
 	result, err := spell.ProcessAction()
