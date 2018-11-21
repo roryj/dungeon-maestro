@@ -12,7 +12,7 @@ import (
 
 const (
 	diceRoll = "roll"
-	identifySpell = "identify"
+	identifySpell = "spell"
 )
 
 
@@ -49,10 +49,10 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	var action DndAction
 
-	log.Printf("processing command %s", sr.Command)
-
 	// remove html encoded "/" character from the front of the command
 	command := strings.Replace(sr.Command, "%2F", "", 1)
+	log.Printf("processing command %s", command)
+
 
 	switch command {
 	case diceRoll: // for a dice roll, we expect the following format: /roll <number-of-dice> d<dice-type> ie. /roll 10 d4
@@ -78,7 +78,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	default:
 		return events.APIGatewayProxyResponse{
 			StatusCode: 400,
-			Body: "unknown request type. Only [/roll] is accepted",
+			Body: "unknown request type. Only [/roll /spell] are accepted",
 		}, nil
 	}
 
@@ -105,8 +105,6 @@ func parseSlackRequest(request string) (SlackRequest, error) {
 	p1 := strings.Replace(request, "=", "\": \"", -1)
 	p2 := strings.Replace(p1, "&", "\", \"", -1)
 	p3 := "{ \"" + p2 + "\"}"
-
-	log.Printf("This is the result: %s", p3)
 
 	var sr SlackRequest
 	err := json.Unmarshal([]byte(p3), &sr)
