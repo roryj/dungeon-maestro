@@ -1,6 +1,7 @@
-GOOS=linux GOARCH=amd64 go build -o main src/go.roryj.dnd/main.go
+make clean
+make build
 
-zip main.zip main
+zip maestro.zip maestro
 
 sam package --template-file template.yaml \
     --output-template-file packaged.yaml \
