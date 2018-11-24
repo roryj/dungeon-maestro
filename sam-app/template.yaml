@@ -1,10 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-    sam-app
+    Template for the Dungeon Maestro lambda function. Processes commands from slack, and translates them into a DnD
+    based request.
 
-    Sample SAM Template for sam-app
-    
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
     Function:
@@ -78,13 +77,13 @@ Resources:
 Outputs:
 
     DungeonMaestroApi:
-      Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+      Description: "API Gateway endpoint URL for Prod stage for the Dungeon Maestro function"
       Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
 
     DungeonMaestroFunction:
-      Description: "Hello World Lambda Function ARN"
+      Description: "Dungeon Maestro Lambda Function ARN"
       Value: !GetAtt DungeonMaestroFunction.Arn
 
     HelloWorldFunctionIamRole:
-      Description: "Implicit IAM Role created for Hello World function"
+      Description: "IAM Role created for Dungeon Maestro function"
       Value: !GetAtt DungeonMaestroFunctionRole.Arn
