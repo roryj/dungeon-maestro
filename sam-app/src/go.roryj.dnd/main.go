@@ -113,7 +113,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	if err != nil {
 		fmt.Printf("Unable to marshal request: %v", err)
 		return events.APIGatewayProxyResponse{
-			StatusCode: 400,
+			StatusCode: 200,
 		}, err
 	}
 
@@ -129,7 +129,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		action, err = NewDiceRoll(sr.UserName, sr.Text)
 		if err != nil {
 			return events.APIGatewayProxyResponse{
-				StatusCode: 400,
+				StatusCode: 200,
 				Body:       fmt.Sprintf("%s", err),
 			}, nil
 		}
@@ -140,15 +140,15 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		action, err = NewIdentifySpell(sr.Text)
 		if err != nil {
 			return events.APIGatewayProxyResponse{
-				StatusCode: 400,
+				StatusCode: 200,
 				Body:       fmt.Sprintf("%s", err),
 			}, nil
 		}
 	default:
 		log.Printf("Unable to determine request type: %s", command)
 		return events.APIGatewayProxyResponse{
-			StatusCode: 400,
-			Body:       "unknown request type. Only [/roll /spell] are accepted",
+			StatusCode: 200,
+			Body:       "unknown request type. Only [/roll, /spell] are accepted",
 		}, nil
 	}
 
@@ -157,7 +157,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		if v, ok := err.(*DndActionError); ok {
 			if v.GetType() == UserError {
 				return events.APIGatewayProxyResponse{
-					StatusCode: 400,
+					StatusCode: 200,
 					Body: v.message,
 				}, nil
 			} else {
