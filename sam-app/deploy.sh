@@ -1,5 +1,7 @@
+#!/usr/bin/env bash
+
 make clean
-make build
+make build || exit 1
 
 zip maestro.zip maestro
 
