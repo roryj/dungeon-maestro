@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	UserError = "USER"
+	UserError    = "USER"
 	ServiceError = "SERVICE"
 )
 
@@ -34,7 +34,7 @@ type DndAction interface {
 }
 
 type DiceRoll struct {
-	user string
+	user         string
 	diceSides    int
 	numberOfDice int
 }
@@ -69,7 +69,7 @@ func NewDiceRoll(user, input string) (*DiceRoll, error) {
 	}
 
 	return &DiceRoll{
-		user: user,
+		user:         user,
 		diceSides:    diceSides,
 		numberOfDice: numDice,
 	}, nil
@@ -101,7 +101,7 @@ func NewIdentifySpell(input string) (*IdentifySpell, error) {
 	s := strings.Replace(input, "+", " ", -1)
 
 	return &IdentifySpell{
-		spellName: s,
+		spellName:  s,
 		statBlocks: []string{},
 	}, nil
 }

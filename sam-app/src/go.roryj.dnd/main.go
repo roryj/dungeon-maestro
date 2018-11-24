@@ -24,6 +24,7 @@ const (
 )
 
 const slackUrlEndpointFormat = "https://hooks.slack.com/services/%s"
+
 var slackWebhookEndpoint string
 
 var stage string
@@ -158,7 +159,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 			if v.GetType() == UserError {
 				return events.APIGatewayProxyResponse{
 					StatusCode: 200,
-					Body: v.message,
+					Body:       v.message,
 				}, nil
 			} else {
 				log.Printf("error processing action: %v. %v", action, err)
@@ -190,13 +191,13 @@ func postSlackUpdate(result slack.WebhookResponse) error {
 	}
 
 	b, err := json.Marshal(result)
-	if err !=  nil {
+	if err != nil {
 		return err
 	}
 
 	_, err = http.Post(slackWebhookEndpoint, "application/json", bytes.NewReader(b))
 	if err != nil {
-		return  err
+		return err
 	}
 
 	log.Printf("successfully posted to slack")

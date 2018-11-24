@@ -13,36 +13,36 @@ type Request struct {
 }
 
 type WebhookResponse struct {
-	Text string `json:"text"`
+	Text        string `json:"text"`
 	Attachments []WebhookResponseAttachment
 }
 
 type WebhookResponseAttachment struct {
 	Title string `json:"title"`
 	// ***** Used for images *****
-	Fields []WebhookResponseAttachmentField `json:"fields"`
-	AuthorName string                       `json:"author_name"`
-	AuthorIcon string                       `json:"author_icon"`
-	ImageUrl string                         `json:"image_url"`
+	Fields     []WebhookResponseAttachmentField `json:"fields"`
+	AuthorName string                           `json:"author_name"`
+	AuthorIcon string                           `json:"author_icon"`
+	ImageUrl   string                           `json:"image_url"`
 	// ***** Used for simple text posts *****
 	Text string `json:"text"`
 	// ***** Used for polls *****
-	Fallback string                           `json:"fallback"`
-	CallbackId string                         `json:"callback_id"`
-	Color string                              `json:"color"`
-	AttachmentType string                     `json:"attachment_type"`
-	Actions []WebhookResponseAttachmentAction `json:"actions"`
+	Fallback       string                            `json:"fallback"`
+	CallbackId     string                            `json:"callback_id"`
+	Color          string                            `json:"color"`
+	AttachmentType string                            `json:"attachment_type"`
+	Actions        []WebhookResponseAttachmentAction `json:"actions"`
 }
 
 type WebhookResponseAttachmentField struct {
 	Title string `json:"title"`
 	Value string `json:"value"`
-	Short bool `json:"short"`
+	Short bool   `json:"short"`
 }
 
 type WebhookResponseAttachmentAction struct {
-	Name string `json:"name"`
-	Text string `json:"text"`
-	Type string `json:"type"`
+	Name  string `json:"name"`
+	Text  string `json:"text"`
+	Type  string `json:"type"`
 	Value string `json:"value"`
 }
