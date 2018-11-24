@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go.roryj.dnd/slack"
 	"golang.org/x/net/html"
 	"log"
 	"math/rand"
@@ -10,11 +11,30 @@ import (
 	"strings"
 )
 
+const (
+	UserError = "USER"
+	ServiceError = "SERVICE"
+)
+
+type DndActionError struct {
+	message   string
+	errorType string
+}
+
+func (e *DndActionError) Error() string {
+	return e.message
+}
+
+func (e *DndActionError) GetType() string {
+	return e.errorType
+}
+
 type DndAction interface {
-	ProcessAction() (string, error)
+	ProcessAction() (slack.WebhookResponse, error)
 }
 
 type DiceRoll struct {
+	user string
 	diceSides    int
 	numberOfDice int
 }
@@ -22,7 +42,7 @@ type DiceRoll struct {
 // NewDiceRoll takes the input text for the /roll command and turns it into a DiceRoll struct
 // The format for the dice roll command is /roll <num-dice> d<dice-type>
 // ex: /roll 10 d20
-func NewDiceRoll(input string) (*DiceRoll, error) {
+func NewDiceRoll(user, input string) (*DiceRoll, error) {
 	// split on html encoded spaces (+)
 	split := strings.Split(input, "+")
 
@@ -49,12 +69,13 @@ func NewDiceRoll(input string) (*DiceRoll, error) {
 	}
 
 	return &DiceRoll{
+		user: user,
 		diceSides:    diceSides,
 		numberOfDice: numDice,
 	}, nil
 }
 
-func (d *DiceRoll) ProcessAction() (string, error) {
+func (d *DiceRoll) ProcessAction() (slack.WebhookResponse, error) {
 	log.Printf("Processing dice roll on %v", d)
 	var total int
 
@@ -62,7 +83,9 @@ func (d *DiceRoll) ProcessAction() (string, error) {
 		total += rand.Intn(d.diceSides) + 1
 	}
 
-	return fmt.Sprintf("Rolled %d d%d and got %d\n", d.numberOfDice, d.diceSides, total), nil
+	return slack.WebhookResponse{
+		Text: fmt.Sprintf("%s rolled %d d%d and got %d\n", d.user, d.numberOfDice, d.diceSides, total),
+	}, &DndActionError{}
 }
 
 const dndSpellEndoint = "https://www.dndbeyond.com/spells/"
@@ -85,7 +108,7 @@ func NewIdentifySpell(input string) (*IdentifySpell, error) {
 // replaced by "-". Any apostrophes should be removed completely
 // ex: 	Antimagic Field -> /spells/antimagic-field
 // 		Antipathy/Sympathy -> /spells/antipathy-sympathy
-func (s *IdentifySpell) ProcessAction() (string, error) {
+func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 	log.Printf("Processing spell identify on %v", s)
 
 	urlEncodedSpell := strings.Replace(s.spellName, " ", "-", -1)
@@ -99,13 +122,29 @@ func (s *IdentifySpell) ProcessAction() (string, error) {
 
 	resp, err := http.Get(fullPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse the request from dnd beyod. %v", err)
+
+		return slack.WebhookResponse{}, &DndActionError{
+			message:   fmt.Sprintf("failed to make a request to dnd beyond. %v", err),
+			errorType: ServiceError,
+		}
 	}
 	defer resp.Body.Close()
 
 	rootDoc, err := html.Parse(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse the request from dnd beyod. %v", err)
+		return slack.WebhookResponse{}, &DndActionError{
+			message:   fmt.Sprintf("failed to parse the request from dnd beyod. %v", err),
+			errorType: ServiceError,
+		}
+	}
+
+	// first check to see if this is a 404 page (unknown spell)
+	_, ok := findHtmlElement(rootDoc, "error-page error-page-404")
+	if ok {
+		return slack.WebhookResponse{}, &DndActionError{
+			message:   fmt.Sprintf("unknown spell: %s", s.spellName),
+			errorType: UserError,
+		}
 	}
 
 	var missingAttributes []string
@@ -113,10 +152,9 @@ func (s *IdentifySpell) ProcessAction() (string, error) {
 
 	spellAttributes := []string{"Level", "Casting Time", "Range/Area", "Components", "Duration", "School",
 		"Attack/Save", "Damage/Effect"}
-	//spellAttributes := []string { "Components" }
 
 	for _, a := range spellAttributes {
-		log.Printf("getting %s attribute", a)
+		log.Printf("Getting %s attribute", a)
 		r, ok := getSpellAttribute(rootDoc, a)
 		if !ok {
 			missingAttributes = append(missingAttributes, a)
@@ -126,10 +164,15 @@ func (s *IdentifySpell) ProcessAction() (string, error) {
 	}
 
 	if len(missingAttributes) > 0 {
-		return "", fmt.Errorf("failed to find attributes for: %v", missingAttributes)
+		return slack.WebhookResponse{}, &DndActionError{
+			message:   fmt.Sprintf("failed to find attributes for: %v", missingAttributes),
+			errorType: ServiceError,
+		}
 	}
 
-	return result, nil
+	return slack.WebhookResponse{
+		Text: result,
+	}, nil
 }
 
 func getSpellAttribute(n *html.Node, spellAttribute string) (string, bool) {
