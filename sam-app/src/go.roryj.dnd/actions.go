@@ -83,9 +83,11 @@ func (d *DiceRoll) ProcessAction() (slack.WebhookResponse, error) {
 		total += rand.Intn(d.diceSides) + 1
 	}
 
+	log.Printf("successfully rolled %d d%d and got %d", d.numberOfDice, d.diceSides, total)
+
 	return slack.WebhookResponse{
 		Text: fmt.Sprintf("%s rolled %d d%d and got %d\n", d.user, d.numberOfDice, d.diceSides, total),
-	}, &DndActionError{}
+	}, nil
 }
 
 const dndSpellEndoint = "https://www.dndbeyond.com/spells/"
