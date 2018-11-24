@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-make clean
+make clean || exit 1
 make build || exit 1
 
 zip maestro.zip maestro
@@ -15,5 +15,6 @@ sam deploy \
     --template-file packaged.yaml \
     --stack-name dungeon-maestro-stack \
     --capabilities CAPABILITY_NAMED_IAM \
+    --parameter-overrides Stage=beta \
     --profile roryj \
     --region us-west-2
