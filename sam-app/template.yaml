@@ -14,7 +14,8 @@ Parameters:
     Stage:
         Description: The stage for the function
         Type: String
-        Default: beta
+        AllowedValues: [alpha beta gamma prod]
+        Default: alpha
 
 Resources:
 
