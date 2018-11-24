@@ -86,7 +86,7 @@ func (d *DiceRoll) ProcessAction() (slack.WebhookResponse, error) {
 	log.Printf("successfully rolled %d d%d and got %d", d.numberOfDice, d.diceSides, total)
 
 	return slack.WebhookResponse{
-		Text: fmt.Sprintf("%s rolled %d d%d and got %d\n", d.user, d.numberOfDice, d.diceSides, total),
+		Text:         fmt.Sprintf("%s rolled %d d%d and got %d\n", d.user, d.numberOfDice, d.diceSides, total),
 		ResponseType: slack.ShowResponseToAll,
 	}, nil
 }
@@ -174,7 +174,7 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 	}
 
 	return slack.WebhookResponse{
-		Text: result,
+		Text:         result,
 		ResponseType: slack.ShowResponseToAll,
 	}, nil
 }

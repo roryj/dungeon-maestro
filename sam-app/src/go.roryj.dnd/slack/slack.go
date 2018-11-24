@@ -17,9 +17,9 @@ const (
 )
 
 type WebhookResponse struct {
-	Text        string `json:"text"`
-	ResponseType string `json:"response_type"`
-	Attachments []WebhookResponseAttachment `json:"attachments"`
+	Text         string                      `json:"text"`
+	ResponseType string                      `json:"response_type"`
+	Attachments  []WebhookResponseAttachment `json:"attachments"`
 }
 
 type WebhookResponseAttachment struct {

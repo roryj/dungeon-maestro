@@ -31,7 +31,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		log.Printf("Unable to marshal request: %v", err)
 		return events.APIGatewayProxyResponse{
 			StatusCode: 200,
-			Body: err.Error(),
+			Body:       err.Error(),
 		}, err
 	}
 
