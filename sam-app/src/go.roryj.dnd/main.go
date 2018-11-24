@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"go.roryj.dnd/slack"
@@ -23,8 +22,7 @@ var region string
 func init() {
 	stage = os.Getenv("Stage")
 	region = os.Getenv("Region")
-
-	log.Printf("starting invoke in %s and %s", stage, region)
+	log.Printf("starting container with stage: %s region: %s", stage, region)
 }
 
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -33,6 +31,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		log.Printf("Unable to marshal request: %v", err)
 		return events.APIGatewayProxyResponse{
 			StatusCode: 200,
+			Body: err.Error(),
 		}, err
 	}
 
@@ -49,7 +48,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		if err != nil {
 			return events.APIGatewayProxyResponse{
 				StatusCode: 200,
-				Body:       fmt.Sprintf("%s", err),
+				Body:       err.Error(),
 			}, nil
 		}
 
@@ -60,13 +59,13 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		if err != nil {
 			return events.APIGatewayProxyResponse{
 				StatusCode: 200,
-				Body:       fmt.Sprintf("%s", err),
+				Body:       err.Error(),
 			}, nil
 		}
 	default:
 		log.Printf("Unable to determine request type: %s", command)
 		return events.APIGatewayProxyResponse{
-			StatusCode: 200,
+			StatusCode: 200, // return a 200 so that the user sees the response
 			Body:       "unknown request type. Only [/roll, /spell] are accepted",
 		}, nil
 	}
@@ -76,20 +75,20 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		if v, ok := err.(*DndActionError); ok {
 			if v.GetType() == UserError {
 				return events.APIGatewayProxyResponse{
-					StatusCode: 200,
+					StatusCode: 200, // return a 200 so that the result is seen by the user
 					Body:       v.message,
 				}, nil
 			} else {
 				log.Printf("error processing action: %v. %v", action, err)
 				return events.APIGatewayProxyResponse{
 					StatusCode: 500,
-				}, errors.New("unable to process the action")
+				}, errors.New("service error")
 			}
 		} else {
 			log.Printf("the error type from ProcessAction was an unexpected type: %v", err)
 			return events.APIGatewayProxyResponse{
 				StatusCode: 500,
-			}, errors.New("internal error")
+			}, errors.New("service error")
 		}
 	}
 
@@ -98,7 +97,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		log.Printf("failed to jsonify response payload: %v", err)
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
-		}, errors.New("internal error")
+		}, errors.New("service error")
 	}
 
 	result := events.APIGatewayProxyResponse{

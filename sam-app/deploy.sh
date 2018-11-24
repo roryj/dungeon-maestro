@@ -15,6 +15,5 @@ sam deploy \
     --template-file packaged.yaml \
     --stack-name dungeon-maestro-stack \
     --capabilities CAPABILITY_NAMED_IAM \
-    --parameter-overrides Stage=beta \
     --profile roryj \
     --region us-west-2
