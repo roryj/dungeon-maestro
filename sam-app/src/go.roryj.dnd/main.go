@@ -175,13 +175,6 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		}
 	}
 
-	postSlackUpdate(actionResult)
-	result := events.APIGatewayProxyResponse{
-		StatusCode: 200,
-		Body:       actionResult.Text,
-	}
-
-	return result, nil
 }
 
 func postSlackUpdate(result slack.WebhookResponse) error {
@@ -189,15 +182,20 @@ func postSlackUpdate(result slack.WebhookResponse) error {
 		log.Printf("no endpoint set, not sending slack update")
 		return nil
 	}
-
-	b, err := json.Marshal(result)
+	r, err := json.Marshal(actionResult)
 	if err != nil {
-		return err
+		log.Printf("failed to jsonify response payload: %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: 500,
+		}, errors.New("internal error")
 	}
 
 	_, err = http.Post(slackWebhookEndpoint, "application/json", bytes.NewReader(b))
 	if err != nil {
 		return err
+	result := events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Body:       string(r),
 	}
 
 	log.Printf("successfully posted to slack")

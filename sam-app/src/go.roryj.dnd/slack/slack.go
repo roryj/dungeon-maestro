@@ -12,9 +12,14 @@ type Request struct {
 	ResponseUrl string `json:"response_url"`
 }
 
+const (
+	ShowResponseToAll = "in_channel"
+)
+
 type WebhookResponse struct {
 	Text        string `json:"text"`
-	Attachments []WebhookResponseAttachment
+	ResponseType string `json:"response_type"`
+	Attachments []WebhookResponseAttachment `json:"attachments"`
 }
 
 type WebhookResponseAttachment struct {
