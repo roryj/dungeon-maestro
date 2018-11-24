@@ -1,19 +1,13 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"go.roryj.dnd/slack"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 )
@@ -23,10 +17,6 @@ const (
 	identifySpell = "spell"
 )
 
-const slackUrlEndpointFormat = "https://hooks.slack.com/services/%s"
-
-var slackWebhookEndpoint string
-
 var stage string
 var region string
 
@@ -35,78 +25,6 @@ func init() {
 	region = os.Getenv("Region")
 
 	log.Printf("starting invoke in %s and %s", stage, region)
-
-	secrets, err := getSecret()
-	if err != nil {
-		log.Printf("failed to get secret from ssm: %v", err)
-		log.Printf("no SlackWebhookPath env var set. Not sending update to webhook")
-	} else {
-		log.Printf("able to retrieve secrets")
-		if secrets.SlackWebhookUrl == "" {
-			log.Printf("no secret for the slack webhook url")
-		} else {
-			slackWebhookEndpoint = fmt.Sprintf(slackUrlEndpointFormat, secrets.SlackWebhookUrl)
-		}
-	}
-}
-
-type lambdaSecrets struct {
-	SlackWebhookUrl string `json:"SlackWebhookUrl"`
-}
-
-func getSecret() (lambdaSecrets, error) {
-	secretName := "beta/dungeonMaestro/slack"
-
-	//Create a Secrets Manager client
-	session.NewSession()
-	sess := session.Must(session.NewSession())
-	svc := secretsmanager.New(sess)
-	input := &secretsmanager.GetSecretValueInput{
-		SecretId:     aws.String(secretName),
-		VersionStage: aws.String("AWSCURRENT"), // VersionStage defaults to AWSCURRENT if unspecified
-	}
-
-	// In this sample we only handle the specific exceptions for the 'GetSecretValue' API.
-	// See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-	result, err := svc.GetSecretValue(input)
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case secretsmanager.ErrCodeDecryptionFailure:
-				// Secrets Manager can't decrypt the protected secret text using the provided KMS key.
-				log.Println(secretsmanager.ErrCodeDecryptionFailure, aerr.Error())
-
-			case secretsmanager.ErrCodeInternalServiceError:
-				// An error occurred on the server side.
-				log.Println(secretsmanager.ErrCodeInternalServiceError, aerr.Error())
-
-			case secretsmanager.ErrCodeInvalidParameterException:
-				// You provided an invalid value for a parameter.
-				log.Println(secretsmanager.ErrCodeInvalidParameterException, aerr.Error())
-
-			case secretsmanager.ErrCodeInvalidRequestException:
-				// You provided a parameter value that is not valid for the current state of the resource.
-				log.Println(secretsmanager.ErrCodeInvalidRequestException, aerr.Error())
-
-			case secretsmanager.ErrCodeResourceNotFoundException:
-				// We can't find the resource that you asked for.
-				log.Println(secretsmanager.ErrCodeResourceNotFoundException, aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			log.Println(err.Error())
-		}
-
-		return lambdaSecrets{}, err
-	}
-
-	// Decrypts secret using the associated KMS CMK.
-	// Depending on whether the secret is a string or binary, one of these fields will be populated.
-	var secrets lambdaSecrets
-	err = json.Unmarshal([]byte(*result.SecretString), &secrets)
-
-	return secrets, err
 }
 
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -175,13 +93,6 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		}
 	}
 
-}
-
-func postSlackUpdate(result slack.WebhookResponse) error {
-	if slackWebhookEndpoint == "" {
-		log.Printf("no endpoint set, not sending slack update")
-		return nil
-	}
 	r, err := json.Marshal(actionResult)
 	if err != nil {
 		log.Printf("failed to jsonify response payload: %v", err)
@@ -190,17 +101,12 @@ func postSlackUpdate(result slack.WebhookResponse) error {
 		}, errors.New("internal error")
 	}
 
-	_, err = http.Post(slackWebhookEndpoint, "application/json", bytes.NewReader(b))
-	if err != nil {
-		return err
 	result := events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Body:       string(r),
 	}
 
-	log.Printf("successfully posted to slack")
-
-	return nil
+	return result, nil
 }
 
 // parseSlackRequest takes a slack request body with its crazy "&" splitting and attempts to turn it into
