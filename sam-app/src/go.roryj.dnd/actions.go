@@ -151,18 +151,41 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 	}
 
 	var missingAttributes []string
-	result := fmt.Sprintf("Description of %s\n", s.spellName)
-
 	spellAttributes := []string{"Level", "Casting Time", "Range/Area", "Components", "Duration", "School",
 		"Attack/Save", "Damage/Effect"}
+	currRow := 0
+	maxInRow := 4
 
-	for _, a := range spellAttributes {
+	// get the number of separate rows to display in slack based on the number of spell attributes, and the max number
+	// to display in a row. We use separate attachments to identify rows for slack, and separate fields within an
+	// attachment to specify columns
+	numRows := len(spellAttributes) / maxInRow
+	attachments := make([]slack.WebhookResponseAttachment, numRows)
+
+	for index, a := range spellAttributes {
 		log.Printf("Getting %s attribute", a)
-		r, ok := getSpellAttribute(rootDoc, a)
+		r, ok := getValueForAttribute(rootDoc, a)
 		if !ok {
 			missingAttributes = append(missingAttributes, a)
 		} else {
-			result = result + r + "\n"
+			// this is horribly inefficient, and should most def be using pointers here, but this works, and is totally
+			// fine for the most part
+			attachment := attachments[currRow]
+			fields := attachment.Fields
+			fields = append(fields, slack.WebhookResponseAttachmentField{
+				Title: a,
+				Value: r,
+				Short: true,
+			})
+
+			attachments[currRow] = slack.WebhookResponseAttachment{
+				Fields: fields,
+			}
+
+			// if the next increment will cause us to be in the max per-row, increment the row count
+			if index%maxInRow+1 == maxInRow {
+				currRow++
+			}
 		}
 	}
 
@@ -174,14 +197,10 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 	}
 
 	return slack.WebhookResponse{
-		Text:         result,
+		Text:         fmt.Sprintf("Description of the spell %s", s.spellName),
+		Attachments:  attachments,
 		ResponseType: slack.ShowResponseToAll,
 	}, nil
-}
-
-func getSpellAttribute(n *html.Node, spellAttribute string) (string, bool) {
-	value, ok := getValueForAttribute(n, spellAttribute)
-	return fmt.Sprintf("%s: %s", spellAttribute, value), ok
 }
 
 const classFormat = "ddb-statblock-item ddb-statblock-item-%s"
