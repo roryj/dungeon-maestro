@@ -5,6 +5,7 @@ import (
 	"go.roryj.dnd/slack"
 	"golang.org/x/net/html"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -159,7 +160,7 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 	// get the number of separate rows to display in slack based on the number of spell attributes, and the max number
 	// to display in a row. We use separate attachments to identify rows for slack, and separate fields within an
 	// attachment to specify columns
-	numRows := len(spellAttributes) / maxInRow
+	numRows := int(math.Ceil(float64(len(spellAttributes) / maxInRow)))
 	attachments := make([]slack.WebhookResponseAttachment, numRows)
 
 	for index, a := range spellAttributes {
