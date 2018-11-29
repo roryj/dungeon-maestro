@@ -22,8 +22,8 @@ out
 gen
 
 # App specific files
-sam-app/maestro*
-sam-app/packaged.yaml
+maestro*
+packaged.yaml
 
 # mac files
 .DS_Store
