@@ -15,7 +15,7 @@ can ask the dungeon maestro to roll some dice for you.
 ```
 
 #### Examples
-Whether you are rolling a d20 to see if you successfully charmed the evil wizard to allow your part to escape:
+Whether you are rolling a d20 to see if you successfully charmed the evil wizard to allow your party to escape:
 ```
 /roll 1 d20
 roryj rolled 1 d20 and got 17
