@@ -19,17 +19,25 @@ Parameters:
             - gamma
             - prod
         Default: alpha
+    EnableTracing:
+        Description: Enable tracing in the service
+        Type: String
+        AllowedValues:
+            - true
+            - false
+        Default: false
+
+Conditions:
+    ShouldEnableTracing: !Equals [true, !Ref EnableTracing]
 
 Resources:
-
     DungeonMaestroFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
             CodeUri: ./
             Handler: maestro
             Runtime: go1.x
-            Role: !GetAtt DungeonMaestroFunctionRole.Arn
-            Tracing: Active
+            Tracing: !If [ShouldEnableTracing, Active, PassThrough]
             Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
                 Variables:
                     Stage: !Ref Stage
@@ -41,39 +49,6 @@ Resources:
                         Path: /
                         Method: ANY
 
-    DungeonMaestroFunctionRole:
-        Properties:
-            AssumeRolePolicyDocument:
-                Statement:
-                -   Action:
-                    - sts:AssumeRole
-                    Effect: Allow
-                    Principal:
-                        Service:
-                        - lambda.amazonaws.com
-                Version: '2012-10-17'
-            Policies:
-            -   PolicyDocument:
-                    Statement:
-                    -   Action:
-                        - logs:CreateLogGroup
-                        - logs:CreateLogStream
-                        - logs:PutLogEvents
-                        Effect: Allow
-                        Resource: '*'
-                    Version: '2012-10-17'
-                PolicyName: DungeonMaestroLambdaBasicExecution
-            -   PolicyDocument:
-                    Statement:
-                    -   Action:
-                        - xray:PutTraceSegments
-                        - xray:PutTelemetryRecords
-                        Effect: Allow
-                        Resource: '*'
-                    Version: '2012-10-17'
-                PolicyName: DungeonMaestroLambdaXRayAccess
-        Type: AWS::IAM::Role
-
 Outputs:
 
     DungeonMaestroApi:
@@ -84,6 +59,3 @@ Outputs:
       Description: "Dungeon Maestro Lambda Function ARN"
       Value: !GetAtt DungeonMaestroFunction.Arn
 
-    HelloWorldFunctionIamRole:
-      Description: "IAM Role created for Dungeon Maestro function"
-      Value: !GetAtt DungeonMaestroFunctionRole.Arn
