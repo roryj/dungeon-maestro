@@ -1,7 +1,7 @@
 # Dungeon Maestro
 
 The dungeon maestro application is a slack bot that can respond to D&D related commands. Making slack that much more
-useful for perspective campaigns. Only works with 5e
+useful for perspective campaigns.
 
 ## Actions
 
@@ -36,7 +36,7 @@ roryj rolled 1 d24 and got 21
 ```
 
 ### Spell
-The spell action gets you spell information for any spell that can be found on [D&D Beyond](https://www.dndbeyond.com).
+The spell action gets you spell information for any spell that can be found on [D&D Beyond](https://www.dndbeyond.com), which only has spells from D&D 5th edition.
 
 ### Request Format
 ```
