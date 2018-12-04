@@ -146,10 +146,19 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 	_, ok := findHtmlElement(rootDoc, "error-page error-page-404")
 	if ok {
 		return slack.WebhookResponse{}, &DndActionError{
-			message:   fmt.Sprintf("unknown spell: %s", s.spellName),
+			message:   fmt.Sprintf("Unknown spell: %s", s.spellName),
 			errorType: UserError,
 		}
 	}
+
+	// then check to see if the page is a spell that is available without a special subscription
+	if isBehindContentWall(rootDoc) {
+		return slack.WebhookResponse{}, &DndActionError{
+			message:   fmt.Sprintf("The spell %s is locked behind special content and cannot currently be accessed", s.spellName),
+			errorType: UserError,
+		}
+	}
+
 
 	var missingAttributes []string
 	spellAttributes := []string{"Level", "Casting Time", "Range/Area", "Components", "Duration", "School",
@@ -202,6 +211,15 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 		Attachments:  attachments,
 		ResponseType: slack.ShowResponseToAll,
 	}, nil
+}
+
+func isBehindContentWall(n *html.Node) bool {
+	e, ok := findHtmlElement(n, "byline")
+	if !ok || e.FirstChild == nil {
+		return true
+	}
+
+	return strings.Contains(e.FirstChild.Data, "Use your Twitch account or create one to sign in to D&D Beyond.")
 }
 
 const classFormat = "ddb-statblock-item ddb-statblock-item-%s"
