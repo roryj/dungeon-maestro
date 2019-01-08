@@ -136,6 +136,7 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 
 	rootDoc, err := html.Parse(resp.Body)
 	if err != nil {
+		log.Printf("Failed to parse request from dnd beyond. %v", err)
 		return slack.WebhookResponse{}, &DndActionError{
 			message:   fmt.Sprintf("failed to parse the request from dnd beyod. %v", err),
 			errorType: ServiceError,
@@ -145,6 +146,7 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 	// first check to see if this is a 404 page (unknown spell)
 	_, ok := findHtmlElement(rootDoc, "error-page error-page-404")
 	if ok {
+		log.Printf("Spell %s was not found", s.spellName)
 		return slack.WebhookResponse{}, &DndActionError{
 			message:   fmt.Sprintf("Unknown spell: %s", s.spellName),
 			errorType: UserError,
@@ -153,6 +155,7 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 
 	// then check to see if the page is a spell that is available without a special subscription
 	if isBehindContentWall(rootDoc) {
+		log.Printf("Spell %s is behind a content wall", s.spellName)
 		return slack.WebhookResponse{}, &DndActionError{
 			message:   fmt.Sprintf("The spell %s is locked behind special content and cannot currently be accessed", s.spellName),
 			errorType: UserError,
@@ -216,7 +219,7 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 func isBehindContentWall(n *html.Node) bool {
 	e, ok := findHtmlElement(n, "byline")
 	if !ok || e.FirstChild == nil {
-		return true
+		return false
 	}
 
 	return strings.Contains(e.FirstChild.Data, "Use your Twitch account or create one to sign in to D&D Beyond.")
