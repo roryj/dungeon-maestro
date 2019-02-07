@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -38,6 +39,10 @@ type DiceRoll struct {
 	user         string
 	diceSides    int
 	numberOfDice int
+}
+
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
 }
 
 // NewDiceRoll takes the input text for the /roll command and turns it into a DiceRoll struct
