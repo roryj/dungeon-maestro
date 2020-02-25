@@ -21,6 +21,9 @@
 out
 gen
 
+# visual studio code
+.vscode
+
 # App specific files
 maestro*
 packaged.yaml
