@@ -1,7 +1,12 @@
-.PHONY: deps clean lint build
+.PHONY: deps clean format lint build
+
+all: clean format lint build
 
 lint:
 	golangci-lint run ./...
+
+format:
+	go fmt
 
 deps:
 	go get -u ./...
