@@ -7,4 +7,4 @@ clean:
 	rm -rf ./maestro
 	
 build:
-	GOOS=linux GOARCH=amd64 go build -o maestro ./src/go.roryj.dnd
+	GOOS=linux GOARCH=amd64 go build -o maestro ./
