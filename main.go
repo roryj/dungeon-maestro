@@ -3,12 +3,14 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
-	"go.roryj.dnd/slack"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/roryj/dungeon-maestro/actions"
+	"github.com/roryj/dungeon-maestro/slack"
 )
 
 const (
@@ -35,7 +37,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		}, err
 	}
 
-	var action DndAction
+	var action actions.DndAction
 
 	// remove html encoded "/" character from the front of the command
 	command := strings.Replace(sr.Command, "%2F", "", 1)
@@ -43,19 +45,17 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	switch command {
 	case diceRoll: // for a dice roll, we expect the following format: /roll <number-of-dice> d<dice-type> ie. /roll 10 d4
-		log.Printf("Detected dice roll request.")
-		action, err = NewDiceRoll(sr.UserName, sr.Text)
+		log.Printf("detected dice roll request.")
+		action, err = actions.NewDiceRoll(sr.UserName, sr.Text)
 		if err != nil {
 			return events.APIGatewayProxyResponse{
 				StatusCode: 200,
 				Body:       err.Error(),
 			}, nil
 		}
-
-		break
 	case identifySpell:
 		log.Printf("Detected identify spell request.")
-		action, err = NewIdentifySpell(sr.Text)
+		action, err = actions.NewIdentifySpell(sr.Text)
 		if err != nil {
 			return events.APIGatewayProxyResponse{
 				StatusCode: 200,
@@ -72,11 +72,11 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	actionResult, err := action.ProcessAction()
 	if err != nil {
-		if v, ok := err.(*DndActionError); ok {
-			if v.GetType() == UserError {
+		if v, ok := err.(*actions.DndActionError); ok {
+			if v.GetType() == actions.UserError {
 				return events.APIGatewayProxyResponse{
 					StatusCode: 200, // return a 200 so that the result is seen by the user
-					Body:       v.message,
+					Body:       v.Error(),
 				}, nil
 			} else {
 				log.Printf("error processing action: %v. %v", action, err)

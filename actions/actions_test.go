@@ -1,8 +1,9 @@
-package main
+package actions
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewIdentifySpell(t *testing.T) {
@@ -14,5 +15,5 @@ func TestNewIdentifySpell(t *testing.T) {
 	result, err := spell.ProcessAction()
 
 	assert.Nil(t, err, "the result should not throw an error")
-	t.Logf("Result: %s. Error: %v", result, err)
+	t.Logf("Result: %v. Error: %v", result, err)
 }
