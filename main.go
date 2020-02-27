@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -28,7 +30,7 @@ func init() {
 }
 
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	sr, err := parseSlackRequest(request.Body)
+	sr, err := parseSlackRequest(request.Body, request.IsBase64Encoded)
 	if err != nil {
 		log.Printf("Unable to marshal request: %v", err)
 		return events.APIGatewayProxyResponse{
@@ -111,7 +113,23 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 // parseSlackRequest takes a slack request body with its crazy "&" splitting and attempts to turn it into
 // a Request struct. The request looks something like:
 // token=1234562423&team_id=sadjsakdjasd&team_domain=domain_team&channel_id=id&channel_name=directmessage&user_id=someuserid&user_name=somuser&command=%2Froll&text=&response_url=https%3A%2F%2Fhooks.slack.com%2Fcommands%2FTDWHRGTA6%12341353%2FJCPrs6RD9awZmCpRsD1jCxNM&trigger_id=478111677203.472603571346.d7fe7114ecd1ffed30f481182f180912
-func parseSlackRequest(request string) (slack.Request, error) {
+func parseSlackRequest(request string, isBase64Encoded bool) (slack.Request, error) {
+	if request == "" {
+		return slack.Request{}, fmt.Errorf("empty request body not expected.")
+	}
+
+	if isBase64Encoded {
+		log.Printf("encoded request: %s", request)
+		raw, err := base64.StdEncoding.DecodeString(request)
+		if err != nil {
+			return slack.Request{}, err
+		}
+
+		request = string(raw)
+	}
+
+	log.Printf("processing request: %s", request)
+
 	p1 := strings.Replace(request, "=", "\": \"", -1)
 	p2 := strings.Replace(p1, "&", "\", \"", -1)
 	p3 := "{ \"" + p2 + "\"}"
