@@ -94,32 +94,33 @@ func NewWebhookResponseFromSpellResponse(sr spells.SpellResponse) WebhookRespons
 	}
 }
 
-func getFieldForAttribute(sr spells.SpellResponse, attribute string, short bool) WebhookResponseAttachmentField {
+func getFieldForAttribute(sr spells.SpellResponse, attribute string, isShort bool) WebhookResponseAttachmentField {
+
+	title := attribute
+	var value string
 
 	switch attribute {
 	case "CastingTime":
-		r := sr.CastingTime
-		if sr.Ritual == "yes" {
-			r = fmt.Sprintf("%s [R]", r)
-		}
-		return WebhookResponseAttachmentField{
-			Title: "Casting Time",
-			Value: r,
-			Short: true,
+		title = sr.CastingTime
+		if title == "<invalid Value>" {
+			title = "n/a"
+		} else if sr.Ritual == "yes" {
+			title = fmt.Sprintf("%s [R]", title)
 		}
 	case "Classes":
-		return WebhookResponseAttachmentField{
-			Title: "Classes",
-			Value: sr.DnDClass,
-			Short: true,
-		}
+		value = sr.DnDClass
 	default:
 		r := reflect.ValueOf(sr)
 		f := reflect.Indirect(r).FieldByName(attribute)
-		return WebhookResponseAttachmentField{
-			Title: attribute,
-			Value: f.String(),
-			Short: true,
+		value = f.String()
+		if value == "<invalid Value>" {
+			value = "n/a"
 		}
+	}
+
+	return WebhookResponseAttachmentField{
+		Title: title,
+		Value: value,
+		Short: isShort,
 	}
 }
