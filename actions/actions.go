@@ -140,7 +140,7 @@ func (s *IdentifySpell) ProcessAction() (slack.WebhookResponse, error) {
 
 	if resp.StatusCode != 200 {
 		return slack.WebhookResponse{}, &DndActionError{
-			message:   fmt.Sprintf("spell not found. %v", err),
+			message:   fmt.Sprintf("the spell '%s' was not found. Are you sure you spelled it correctly?", s.spellName),
 			errorType: UserError,
 		}
 	}
