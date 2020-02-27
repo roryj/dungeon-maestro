@@ -44,16 +44,13 @@ Resources:
                     Region: !Ref AWS::Region
             Events:
                 DungeonMaestro:
-                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-                    Properties:
-                        Path: /
-                        Method: ANY
+                    Type: HttpApi
 
 Outputs:
 
     DungeonMaestroApi:
       Description: "API Gateway endpoint URL for Prod stage for the Dungeon Maestro function"
-      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+      Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
 
     DungeonMaestroFunction:
       Description: "Dungeon Maestro Lambda Function ARN"
